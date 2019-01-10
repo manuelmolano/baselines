@@ -65,7 +65,8 @@ def train(args, extra_args):
     alg_kwargs.update(extra_args)
 
     env = build_env(args)
-    print(env.num_envs)
+    print('num. envs ' + str(env.num_envs))
+
     svi = args.save_video_interval
     if svi != 0:
         env = VecVideoRecorder(env,
@@ -218,8 +219,9 @@ def main(args):
     else:
         logger.configure(format_strs=[])
         rank = MPI.COMM_WORLD.Get_rank()
-
+    print('training')
     model, env = train(args, extra_args)
+    print('trained')
     env.close()
 
     if args.save_path is not None and rank == 0:
