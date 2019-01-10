@@ -237,6 +237,10 @@ def main(args):
         while True:
             actions, _, state, _ = model.step(obs, S=state, M=dones)
             obs, _, done, _ = env.step(actions)
+            print(actions)
+            print(state)
+            print(obs)
+            print(done)
             env.render()
             done = done.any() if isinstance(done, np.ndarray) else done
 
