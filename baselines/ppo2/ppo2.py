@@ -140,6 +140,7 @@ def learn(*, network, env, total_timesteps, eval_env=None, seed=None,
     tfirststart = time.time()
 
     nupdates = total_timesteps//nbatch
+    print('start learning')
     for update in range(1, nupdates+1):
         assert nbatch % nminibatches == 0
         # Start timer
@@ -152,6 +153,7 @@ def learn(*, network, env, total_timesteps, eval_env=None, seed=None,
         # Get minibatch
         obs, returns, masks, actions, values, neglogpacs, states, epinfos =\
             runner.run()
+        print(states)
         if eval_env is not None:
             eval_obs, eval_returns, eval_masks, eval_actions, eval_values,\
                 eval_neglogpacs, eval_states, eval_epinfos = eval_runner.run()
@@ -184,8 +186,10 @@ def learn(*, network, env, total_timesteps, eval_env=None, seed=None,
             envinds = np.arange(nenvs)
             flatinds = np.arange(nenvs * nsteps).reshape(nenvs, nsteps)
             envsperbatch = nbatch_train // nsteps
+            print(188)
             for _ in range(noptepochs):
                 np.random.shuffle(envinds)
+                print(191)
                 for start in range(0, nenvs, envsperbatch):
                     end = start + envsperbatch
                     mbenvinds = envinds[start:end]
