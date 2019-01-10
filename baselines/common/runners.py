@@ -11,7 +11,6 @@ class AbstractEnvRunner(ABC):
         self.obs = np.zeros((nenv,) + env.observation_space.shape,
                             dtype=env.observation_space.dtype.name)
         aux = env.reset()
-        print(aux.shape)
         self.obs[:] = aux
         self.nsteps = nsteps
         self.states = model.initial_state
