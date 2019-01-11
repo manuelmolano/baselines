@@ -32,15 +32,16 @@ class Runner(AbstractEnvRunner):
             mb_values.append(values)
             mb_neglogpacs.append(neglogpacs)
             mb_dones.append(self.dones)
-
             # Take actions in env and look the results
             # Infos contains a ton of useful informations
             self.obs[:], rewards, self.dones, infos = self.env.step(actions)
             for info in infos:
                 maybeepinfo = info.get('episode')
-                if maybeepinfo: epinfos.append(maybeepinfo)
+                if maybeepinfo:
+                    maybeepinfo['perf'] = info.get('perf')
+                    epinfos.append(maybeepinfo)
             mb_rewards.append(rewards)
-        #batch of steps to batch of rollouts
+        # batch of steps to batch of rollouts
         mb_obs = np.asarray(mb_obs, dtype=self.obs.dtype)
         mb_rewards = np.asarray(mb_rewards, dtype=np.float32)
         mb_actions = np.asarray(mb_actions)

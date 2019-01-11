@@ -32,7 +32,6 @@ try:
 except ImportError:
     roboschool = None
 
-gym.make('priors-v0')
 _game_envs = defaultdict(set)
 for env in gym.envs.registry.all():
     # TODO: solve this with regexes
@@ -219,9 +218,7 @@ def main(args):
     else:
         logger.configure(format_strs=[])
         rank = MPI.COMM_WORLD.Get_rank()
-    print('training')
     model, env = train(args, extra_args)
-    print('trained')
     env.close()
 
     if args.save_path is not None and rank == 0:
@@ -239,10 +236,6 @@ def main(args):
         while True:
             actions, _, state, _ = model.step(obs, S=state, M=dones)
             obs, _, done, _ = env.step(actions)
-            print(actions)
-            print(state)
-            print(obs)
-            print(done)
             env.render()
             done = done.any() if isinstance(done, np.ndarray) else done
 

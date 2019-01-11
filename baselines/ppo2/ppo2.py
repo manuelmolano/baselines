@@ -21,7 +21,7 @@ def constfn(val):
 
 def learn(*, network, env, total_timesteps, eval_env=None, seed=None,
           nsteps=2048, ent_coef=0.0, lr=3e-4, vf_coef=0.5,  max_grad_norm=0.5,
-          gamma=0.99, lam=0.95, log_interval=10, nminibatches=1, noptepochs=4,
+          gamma=0.99, lam=0.95, log_interval=10, nminibatches=12, noptepochs=4,
           cliprange=0.2, save_interval=0, load_path=None, model_fn=None,
           **network_kwargs):
     '''
@@ -153,7 +153,6 @@ def learn(*, network, env, total_timesteps, eval_env=None, seed=None,
         # Get minibatch
         obs, returns, masks, actions, values, neglogpacs, states, epinfos =\
             runner.run()
-        print(states)
         if eval_env is not None:
             eval_obs, eval_returns, eval_masks, eval_actions, eval_values,\
                 eval_neglogpacs, eval_states, eval_epinfos = eval_runner.run()
@@ -186,10 +185,8 @@ def learn(*, network, env, total_timesteps, eval_env=None, seed=None,
             envinds = np.arange(nenvs)
             flatinds = np.arange(nenvs * nsteps).reshape(nenvs, nsteps)
             envsperbatch = nbatch_train // nsteps
-            print(188)
             for _ in range(noptepochs):
                 np.random.shuffle(envinds)
-                print(191)
                 for start in range(0, nenvs, envsperbatch):
                     end = start + envsperbatch
                     mbenvinds = envinds[start:end]
@@ -220,6 +217,8 @@ def learn(*, network, env, total_timesteps, eval_env=None, seed=None,
                                                 for epinfo in epinfobuf]))
             logger.logkv('eplenmean', safemean([epinfo['l']
                                                 for epinfo in epinfobuf]))
+            logger.logkv('performance', safemean([epinfo['perf']
+                                                  for epinfo in epinfobuf]))
             if eval_env is not None:
                 logger.logkv('eval_eprewmean',
                              safemean([epinfo['r']
