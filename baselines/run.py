@@ -63,7 +63,7 @@ def train(args, extra_args):
     alg_kwargs = get_learn_function_defaults(args.alg, env_type)
     alg_kwargs.update(extra_args)
 
-    env = build_env(args)
+    env = build_env(args, extra_args)
     print('num. envs ' + str(env.num_envs))
 
     svi = args.save_video_interval
@@ -92,7 +92,7 @@ def train(args, extra_args):
     return model, env
 
 
-def build_env(args):
+def build_env(args, extra_args):
     ncpu = multiprocessing.cpu_count()
     if sys.platform == 'darwin':
         ncpu //= 2
@@ -101,7 +101,6 @@ def build_env(args):
     seed = args.seed
 
     env_type, env_id = get_env_type(args.env)
-
     if env_type in {'atari', 'retro'}:
         if alg == 'deepq':
             env = make_env(env_id, env_type, seed=seed,
@@ -114,15 +113,6 @@ def build_env(args):
                                gamestate=args.gamestate,
                                reward_scale=args.reward_scale)
             env = VecFrameStack(env, frame_stack_size)
-    elif env_type in {'envs'}:
-        config = tf.ConfigProto(allow_soft_placement=True,
-                                intra_op_parallelism_threads=1,
-                                inter_op_parallelism_threads=1)
-        config.gpu_options.allow_growth = True
-        get_session(config=config)
-
-        env = make_vec_env(env_id, env_type, nenv,
-                           seed, reward_scale=args.reward_scale)
     else:
         config = tf.ConfigProto(allow_soft_placement=True,
                                 intra_op_parallelism_threads=1,
@@ -136,6 +126,9 @@ def build_env(args):
         if env_type == 'mujoco':
             env = VecNormalize(env)
 
+        if env_id == 'priors-v0':
+            env.update_params(extra_args)
+
     return env
 
 
@@ -147,7 +140,6 @@ def get_env_type(env_id):
         env_type = None
         for g, e in _game_envs.items():
             if env_id in e:
-                print(e)
                 env_type = g
                 break
         mssg = 'env_id {} is not recognized in env types'.\
