@@ -63,7 +63,7 @@ def train(args, extra_args):
     alg_kwargs = get_learn_function_defaults(args.alg, env_type)
     alg_kwargs.update(extra_args)
 
-    env = build_env(args, extra_args)
+    env = build_env(args)
     print('num. envs ' + str(env.num_envs))
 
     svi = args.save_video_interval
@@ -92,7 +92,7 @@ def train(args, extra_args):
     return model, env
 
 
-def build_env(args, extra_args):
+def build_env(args):
     ncpu = multiprocessing.cpu_count()
     if sys.platform == 'darwin':
         ncpu //= 2
@@ -113,6 +113,11 @@ def build_env(args, extra_args):
                                gamestate=args.gamestate,
                                reward_scale=args.reward_scale)
             env = VecFrameStack(env, frame_stack_size)
+    elif env_type in {'envs'}:
+        # np.savez(args.folder + '/extra_args.npz', **args)
+        env = make_vec_env(env_id, env_type, nenv,
+                           seed, reward_scale=args.reward_scale,
+                           wrapper_kwargs=args)
     else:
         config = tf.ConfigProto(allow_soft_placement=True,
                                 intra_op_parallelism_threads=1,
@@ -125,9 +130,6 @@ def build_env(args, extra_args):
 
         if env_type == 'mujoco':
             env = VecNormalize(env)
-
-        if env_id == 'priors-v0':
-            env.update_params(extra_args)
 
     return env
 
