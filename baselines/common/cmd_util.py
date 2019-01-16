@@ -77,7 +77,7 @@ def make_env(env_id, env_type, subrank=0, seed=None, reward_scale=1.0,
 
     # priors task parameters
     if env_id == 'priors-v0':
-        env.update_params(wrapper_kwargs)
+        env.update_params(wrapper_kwargs, seed=subrank)
 
     env = Monitor(env, logger.get_dir() and os.path.join(logger.get_dir(),
                   str(mpi_rank) + '.' + str(subrank)),
