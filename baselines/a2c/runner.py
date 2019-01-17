@@ -2,6 +2,7 @@ import numpy as np
 from baselines.a2c.utils import discount_with_dones
 from baselines.common.runners import AbstractEnvRunner
 
+
 class Runner(AbstractEnvRunner):
     """
     We use this class to generate batches of experiences
@@ -15,17 +16,26 @@ class Runner(AbstractEnvRunner):
     def __init__(self, env, model, nsteps=5, gamma=0.99):
         super().__init__(env=env, model=model, nsteps=nsteps)
         self.gamma = gamma
-        self.batch_action_shape = [x if x is not None else -1 for x in model.train_model.action.shape.as_list()]
+        self.batch_action_shape =\
+            [x if x is not None else -1
+             for x in model.train_model.action.shape.as_list()]
         self.ob_dtype = model.train_model.X.dtype.as_numpy_dtype
 
     def run(self):
         # We initialize the lists that will contain the mb of experiences
-        mb_obs, mb_rewards, mb_actions, mb_values, mb_dones = [],[],[],[],[]
+        mb_obs, mb_rewards, mb_actions, mb_values, mb_dones =\
+            [], [], [], [], []
         mb_states = self.states
         for n in range(self.nsteps):
             # Given observations, take action and value (V(s))
-            # We already have self.obs because Runner superclass run self.obs[:] = env.reset() on init
-            actions, values, states, _ = self.model.step(self.obs, S=self.states, M=self.dones)
+            # We already have self.obs because Runner superclass runs
+            # self.obs[:] = env.reset() on init.
+            # self.model.step comes from Class PolicyWithValue -->
+            # build_policy in policies.py -->
+            # Model class in a2c.py
+            actions, values, states, _ = self.model.step(self.obs,
+                                                         S=self.states,
+                                                         M=self.dones)
 
             # Append the experiences
             mb_obs.append(np.copy(self.obs))
@@ -45,23 +55,28 @@ class Runner(AbstractEnvRunner):
         mb_dones.append(self.dones)
 
         # Batch of steps to batch of rollouts
-        mb_obs = np.asarray(mb_obs, dtype=self.ob_dtype).swapaxes(1, 0).reshape(self.batch_ob_shape)
+        mb_obs = np.asarray(mb_obs, dtype=self.ob_dtype).swapaxes(1, 0).\
+            reshape(self.batch_ob_shape)
         mb_rewards = np.asarray(mb_rewards, dtype=np.float32).swapaxes(1, 0)
-        mb_actions = np.asarray(mb_actions, dtype=self.model.train_model.action.dtype.name).swapaxes(1, 0)
+        type_name = self.model.train_model.action.dtype.name
+        mb_actions = np.asarray(mb_actions, dtype=type_name).swapaxes(1, 0)
         mb_values = np.asarray(mb_values, dtype=np.float32).swapaxes(1, 0)
         mb_dones = np.asarray(mb_dones, dtype=np.bool).swapaxes(1, 0)
         mb_masks = mb_dones[:, :-1]
         mb_dones = mb_dones[:, 1:]
 
-
         if self.gamma > 0.0:
             # Discount/bootstrap off value fn
-            last_values = self.model.value(self.obs, S=self.states, M=self.dones).tolist()
-            for n, (rewards, dones, value) in enumerate(zip(mb_rewards, mb_dones, last_values)):
+            last_values = self.model.value(self.obs, S=self.states,
+                                           M=self.dones).tolist()
+            for n, (rewards, dones, value) in enumerate(zip(mb_rewards,
+                                                            mb_dones,
+                                                            last_values)):
                 rewards = rewards.tolist()
                 dones = dones.tolist()
                 if dones[-1] == 0:
-                    rewards = discount_with_dones(rewards+[value], dones+[0], self.gamma)[:-1]
+                    rewards = discount_with_dones(rewards+[value],
+                                                  dones+[0], self.gamma)[:-1]
                 else:
                     rewards = discount_with_dones(rewards, dones, self.gamma)
 

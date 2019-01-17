@@ -14,6 +14,7 @@ from baselines.a2c.runner import Runner
 
 from tensorflow import losses
 
+
 class Model(object):
 
     """
@@ -23,19 +24,19 @@ class Model(object):
         - Creates the train_model
 
         train():
-        - Make the training part (feedforward and retropropagation of gradients)
+        - Make the training part (feedforward and retropropagation
+          of gradients)
 
         save/load():
         - Save load the model
     """
-    def __init__(self, policy, env, nsteps,
-            ent_coef=0.01, vf_coef=0.5, max_grad_norm=0.5, lr=7e-4,
-            alpha=0.99, epsilon=1e-5, total_timesteps=int(80e6), lrschedule='linear'):
+    def __init__(self, policy, env, nsteps, ent_coef=0.01, vf_coef=0.5,
+                 max_grad_norm=0.5, lr=7e-4, alpha=0.99, epsilon=1e-5,
+                 total_timesteps=int(80e6), lrschedule='linear'):
 
         sess = tf_util.get_session()
         nenvs = env.num_envs
         nbatch = nenvs*nsteps
-
 
         with tf.variable_scope('a2c_model', reuse=tf.AUTO_REUSE):
             # step_model is used for sampling
@@ -50,14 +51,16 @@ class Model(object):
         LR = tf.placeholder(tf.float32, [])
 
         # Calculate the loss
-        # Total loss = Policy gradient loss - entropy * entropy coefficient + Value coefficient * value loss
+        # Total loss = Policy gradient loss - entropy * entropy coefficient
+        #              + Value coefficient * value loss
 
         # Policy loss
         neglogpac = train_model.pd.neglogp(A)
         # L = A(s,a) * -logpi(a|s)
         pg_loss = tf.reduce_mean(ADV * neglogpac)
 
-        # Entropy is used to improve exploration by limiting the premature convergence to suboptimal policy.
+        # Entropy is used to improve exploration by limiting the premature
+        # convergence to suboptimal policy.
         entropy = tf.reduce_mean(train_model.pd.entropy())
 
         # Value loss
@@ -79,7 +82,8 @@ class Model(object):
         # For instance zip(ABCD, xyza) => Ax, By, Cz, Da
 
         # 3. Make op for one policy and value update step of A2C
-        trainer = tf.train.RMSPropOptimizer(learning_rate=LR, decay=alpha, epsilon=epsilon)
+        trainer = tf.train.RMSPropOptimizer(learning_rate=LR, decay=alpha,
+                                            epsilon=epsilon)
 
         _train = trainer.apply_gradients(grads)
 
@@ -92,7 +96,8 @@ class Model(object):
             for step in range(len(obs)):
                 cur_lr = lr.value()
 
-            td_map = {train_model.X:obs, A:actions, ADV:advs, R:rewards, LR:cur_lr}
+            td_map = {train_model.X: obs, A: actions, ADV: advs, R: rewards,
+                      LR: cur_lr}
             if states is not None:
                 td_map[train_model.S] = states
                 td_map[train_model.M] = masks
@@ -101,7 +106,6 @@ class Model(object):
                 td_map
             )
             return policy_loss, value_loss, policy_entropy
-
 
         self.train = train
         self.train_model = train_model
@@ -114,72 +118,79 @@ class Model(object):
         tf.global_variables_initializer().run(session=sess)
 
 
-def learn(
-    network,
-    env,
-    seed=None,
-    nsteps=5,
-    total_timesteps=int(80e6),
-    vf_coef=0.5,
-    ent_coef=0.01,
-    max_grad_norm=0.5,
-    lr=7e-4,
-    lrschedule='linear',
-    epsilon=1e-5,
-    alpha=0.99,
-    gamma=0.99,
-    log_interval=100,
-    load_path=None,
-    **network_kwargs):
+def learn(network, env, seed=None, nsteps=5, total_timesteps=int(80e6),
+          vf_coef=0.5, ent_coef=0.01, max_grad_norm=0.5, lr=7e-4,
+          lrschedule='linear', epsilon=1e-5, alpha=0.99, gamma=0.99,
+          log_interval=100, load_path=None, **network_kwargs):
 
     '''
-    Main entrypoint for A2C algorithm. Train a policy with given network architecture on a given environment using a2c algorithm.
+    Main entrypoint for A2C algorithm. Train a policy with given
+    network architecture on a given environment using a2c algorithm.
 
     Parameters:
     -----------
 
-    network:            policy network architecture. Either string (mlp, lstm, lnlstm, cnn_lstm, cnn, cnn_small, conv_only - see baselines.common/models.py for full list)
-                        specifying the standard network architecture, or a function that takes tensorflow tensor as input and returns
-                        tuple (output_tensor, extra_feed) where output tensor is the last network layer output, extra_feed is None for feed-forward
-                        neural nets, and extra_feed is a dictionary describing how to feed state into the network for recurrent neural nets.
-                        See baselines.common/policies.py/lstm for more details on using recurrent nets in policies
+    network: policy network architecture. Either string (mlp, lstm, lnlstm,
+             cnn_lstm, cnn, cnn_small, conv_only -
+             see baselines.common/models.py for full list) specifying the
+             standard network architecture, or a function that takes
+             tensorflow tensor as input and returns tuple (output_tensor,
+             extra_feed) where output tensor is the last network layer output,
+             extra_feed is None for feed-forward neural nets, and extra_feed
+             is a dictionary describing how to feed state into the network for
+             recurrent neural nets. See baselines.common/policies.py/lstm for
+             more details on using recurrent nets in policies
 
 
-    env:                RL environment. Should implement interface similar to VecEnv (baselines.common/vec_env) or be wrapped with DummyVecEnv (baselines.common/vec_env/dummy_vec_env.py)
+    env: RL environment. Should implement interface similar to VecEnv
+                         (baselines.common/vec_env) or be wrapped with
+                         DummyVecEnv: baselines.common/vec_env/dummy_vec_env.py
 
 
-    seed:               seed to make random number sequence in the alorightm reproducible. By default is None which means seed from system noise generator (not reproducible)
+    seed: seed to make random number sequence in the alorightm reproducible.
+          By default is None which means seed from system noise generator
+          (not reproducible)
 
-    nsteps:             int, number of steps of the vectorized environment per update (i.e. batch size is nsteps * nenv where
-                        nenv is number of environment copies simulated in parallel)
+    nsteps: int, number of steps of the vectorized environment per update
+                (i.e. batch size is nsteps * nenv where nenv is number of
+                 environment copies simulated in parallel)
 
-    total_timesteps:    int, total number of timesteps to train on (default: 80M)
+    total_timesteps: int, total number of timesteps to train on (default: 80M)
 
-    vf_coef:            float, coefficient in front of value function loss in the total loss function (default: 0.5)
+    vf_coef: float, coefficient in front of value function loss in the total
+                    loss function (default: 0.5)
 
-    ent_coef:           float, coeffictiant in front of the policy entropy in the total loss function (default: 0.01)
+    ent_coef: float, coeffictiant in front of the policy entropy in the total
+                     loss function (default: 0.01)
 
-    max_gradient_norm:  float, gradient is clipped to have global L2 norm no more than this value (default: 0.5)
+    max_gradient_norm:  float, gradient is clipped to have global L2 norm
+                               no more than this value (default: 0.5)
 
-    lr:                 float, learning rate for RMSProp (current implementation has RMSProp hardcoded in) (default: 7e-4)
+    lr: float, learning rate for RMSProp (current implementation has RMSProp
+               hardcoded in) (default: 7e-4)
 
-    lrschedule:         schedule of learning rate. Can be 'linear', 'constant', or a function [0..1] -> [0..1] that takes fraction of the training progress as input and
-                        returns fraction of the learning rate (specified as lr) as output
+    lrschedule: schedule of learning rate. Can be 'linear', 'constant', or
+                a function [0..1] -> [0..1] that takes fraction of the training
+                progress as input and returns fraction of the learning rate
+                (specified as lr) as output
 
-    epsilon:            float, RMSProp epsilon (stabilizes square root computation in denominator of RMSProp update) (default: 1e-5)
+    epsilon: float, RMSProp epsilon (stabilizes square root computation in
+                    denominator of RMSProp update) (default: 1e-5)
 
-    alpha:              float, RMSProp decay parameter (default: 0.99)
+    alpha: float, RMSProp decay parameter (default: 0.99)
 
-    gamma:              float, reward discounting parameter (default: 0.99)
+    gamma: float, reward discounting parameter (default: 0.99)
 
-    log_interval:       int, specifies how frequently the logs are printed out (default: 100)
+    log_interval: int, specifies how frequently the logs are printed out
+                       (default: 100)
 
-    **network_kwargs:   keyword arguments to the policy / network builder. See baselines.common/policies.py/build_policy and arguments to a particular type of network
-                        For instance, 'mlp' network architecture has arguments num_hidden and num_layers.
+    **network_kwargs: keyword arguments to the policy / network builder.
+                      See baselines.common/policies.py/build_policy and
+                      arguments to a particular type of network. For instance,
+                      'mlp' network architecture has arguments num_hidden
+                      and num_layers.
 
     '''
-
-
 
     set_global_seeds(seed)
 
@@ -188,8 +199,10 @@ def learn(
     policy = build_policy(env, network, **network_kwargs)
 
     # Instantiate the model object (that creates step_model and train_model)
-    model = Model(policy=policy, env=env, nsteps=nsteps, ent_coef=ent_coef, vf_coef=vf_coef,
-        max_grad_norm=max_grad_norm, lr=lr, alpha=alpha, epsilon=epsilon, total_timesteps=total_timesteps, lrschedule=lrschedule)
+    model = Model(policy=policy, env=env, nsteps=nsteps, ent_coef=ent_coef,
+                  vf_coef=vf_coef, max_grad_norm=max_grad_norm, lr=lr,
+                  alpha=alpha, epsilon=epsilon,
+                  total_timesteps=total_timesteps, lrschedule=lrschedule)
     if load_path is not None:
         model.load(load_path)
 
@@ -206,14 +219,15 @@ def learn(
         # Get mini batch of experiences
         obs, states, rewards, masks, actions, values = runner.run()
 
-        policy_loss, value_loss, policy_entropy = model.train(obs, states, rewards, masks, actions, values)
+        policy_loss, value_loss, policy_entropy =\
+            model.train(obs, states, rewards, masks, actions, values)
         nseconds = time.time()-tstart
 
         # Calculate the fps (frame per second)
         fps = int((update*nbatch)/nseconds)
         if update % log_interval == 0 or update == 1:
-            # Calculates if value function is a good predicator of the returns (ev > 1)
-            # or if it's just worse than predicting nothing (ev =< 0)
+            # Calculates if value function is a good predicator of the returns
+            # (ev > 1) or if it's just worse than predicting nothing (ev =< 0)
             ev = explained_variance(values, rewards)
             logger.record_tabular("nupdates", update)
             logger.record_tabular("total_timesteps", update*nbatch)
@@ -223,4 +237,3 @@ def learn(
             logger.record_tabular("explained_variance", float(ev))
             logger.dump_tabular()
     return model
-
