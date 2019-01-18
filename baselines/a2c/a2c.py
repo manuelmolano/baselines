@@ -1,7 +1,7 @@
 import time
 import functools
 import tensorflow as tf
-
+import numpy as np
 from baselines import logger
 
 from baselines.common import set_global_seeds, explained_variance
@@ -235,5 +235,7 @@ def learn(network, env, seed=None, nsteps=5, total_timesteps=int(80e6),
             logger.record_tabular("policy_entropy", float(policy_entropy))
             logger.record_tabular("value_loss", float(value_loss))
             logger.record_tabular("explained_variance", float(ev))
+            logger.record_tabular("av. reward",
+                                  float(np.mean(rewards)))
             logger.dump_tabular()
     return model
