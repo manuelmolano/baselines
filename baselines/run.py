@@ -2,7 +2,7 @@ import sys
 import multiprocessing
 import os.path as osp
 import gym
-import gym_priors
+import ngym
 from collections import defaultdict
 import tensorflow as tf
 import numpy as np
@@ -16,7 +16,17 @@ from baselines import logger
 from importlib import import_module
 
 from baselines.common.vec_env.vec_normalize import VecNormalize
+from gym.envs.registration import register
 
+# register ngym environments
+register(
+    id='Priors-v0',
+    entry_point='priors:Priors',
+    max_episode_steps=100000,
+    reward_threshold=90.0,
+)
+
+# env = gym.make('Priors-v0')
 try:
     from mpi4py import MPI
 except ImportError:
@@ -33,11 +43,12 @@ except ImportError:
     roboschool = None
 
 _game_envs = defaultdict(set)
+
 for env in gym.envs.registry.all():
     # TODO: solve this with regexes
     env_type = env._entry_point.split(':')[0].split('.')[-1]
     _game_envs[env_type].add(env.id)
-
+# print(_game_envs)
 # reading benchmark names directly from retro requires
 # importing retro here, and for some reason that crashes tensorflow
 # in ubuntu
