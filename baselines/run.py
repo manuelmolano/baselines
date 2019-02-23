@@ -112,6 +112,8 @@ def build_env(args):
     seed = args.seed
 
     env_type, env_id = get_env_type(args.env)
+    # TODO: need special case for priors?
+    # TODO: how to pass parameters to the task
     if env_type in {'atari', 'retro'}:
         if alg == 'deepq':
             env = make_env(env_id, env_type, seed=seed,
@@ -125,7 +127,6 @@ def build_env(args):
                                reward_scale=args.reward_scale)
             env = VecFrameStack(env, frame_stack_size)
     elif env_type in {'envs'}:
-        # np.savez(args.folder + '/extra_args.npz', **args)
         env = make_vec_env(env_id, env_type, nenv,
                            seed, reward_scale=args.reward_scale,
                            wrapper_kwargs=args)
