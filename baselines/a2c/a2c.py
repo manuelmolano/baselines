@@ -120,7 +120,7 @@ class Model(object):
 def learn(network, env, seed=None, nsteps=20, total_timesteps=int(80e6),
           vf_coef=0.5, ent_coef=0.01, max_grad_norm=0.5, lr=7e-4,
           lrschedule='linear', epsilon=1e-5, alpha=0.99, gamma=0.99,
-          log_interval=100, load_path=None, **network_kwargs):
+          log_interval=10000, load_path=None, **network_kwargs):
 
     '''
     Main entrypoint for A2C algorithm. Train a policy with given
