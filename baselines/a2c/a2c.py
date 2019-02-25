@@ -218,7 +218,6 @@ def learn(network, env, seed=None, nsteps=20, total_timesteps=int(80e6),
     for update in range(1, total_timesteps//nbatch+1):
         # Get mini batch of experiences
         obs, states, rewards, masks, actions, values = runner.run()
-        print(rewards)
         policy_loss, value_loss, policy_entropy =\
             model.train(obs, states, rewards, masks, actions, values)
         nseconds = time.time()-tstart
