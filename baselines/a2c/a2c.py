@@ -95,7 +95,6 @@ class Model(object):
             advs = rewards - values
             for step in range(len(obs)):
                 cur_lr = lr.value()
-
             td_map = {train_model.X: obs, A: actions, ADV: advs, R: rewards,
                       LR: cur_lr}
             if states is not None:

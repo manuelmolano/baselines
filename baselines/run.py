@@ -2,7 +2,7 @@ import sys
 import multiprocessing
 import os.path as osp
 import gym
-import ngym
+import task_registrations
 from collections import defaultdict
 import tensorflow as tf
 import numpy as np
@@ -16,17 +16,7 @@ from baselines import logger
 from importlib import import_module
 
 from baselines.common.vec_env.vec_normalize import VecNormalize
-from gym.envs.registration import register
 
-# register ngym environments
-register(
-    id='Priors-v0',
-    entry_point='priors:Priors',
-    max_episode_steps=100000,
-    reward_threshold=90.0,
-)
-
-# env = gym.make('Priors-v0')
 try:
     from mpi4py import MPI
 except ImportError:
