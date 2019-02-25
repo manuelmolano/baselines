@@ -103,7 +103,6 @@ def build_env(args):
 
     env_type, env_id = get_env_type(args.env)
     # TODO: need special case for priors?
-    # TODO: how to pass parameters to the task
     if env_type in {'atari', 'retro'}:
         if alg == 'deepq':
             env = make_env(env_id, env_type, seed=seed,
